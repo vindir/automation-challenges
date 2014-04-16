@@ -1,0 +1,6 @@
+source "https://rubygems.org"
+
+gem 'reel', :git => 'git://github.com/celluloid/reel.git', :branch => 'master'
+gem 'faraday'
+gem 'json'
+gem 'sqlite3'
