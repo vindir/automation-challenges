@@ -10,3 +10,7 @@ Should use a web library like Reel that is lightweight, focuses on concurrency, 
 Reel Response Codes: https://github.com/tarcieri/http/blob/master/lib/http/response.rb
 
 For the PUT /word API, including the word name in the body is redundant to the resource identified in the URI
+
+Installation
+------------
+Install SQLite3, enabling the option SQLITE_ENABLE_COLUMN_METADATA (see www.sqlite.org/compile.html for details).
