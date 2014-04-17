@@ -1,0 +1,223 @@
+#!/bin/bash
+
+if ( [ ! -f Vagrantfile ] || [ ! -d toasters ] ) ; then
+  echo "You can play only in the puppet-playground ;-!"
+  echo "Change your cwd to your cloned puppet-playground directory and then run ./play"
+  exit 1
+fi
+
+toasterdir='toasters'
+
+showhelp () {
+cat << EOF
+
+Play in Puppet Playground.
+
+This command manages the playground: Vagrantfile, Puppetfile, modules/ and manifests/
+
+Usage: play <action> [argument]
+play status                - Show playground status
+play list                  - List the toasters available for installation
+play install <toaster>     - Install the specified toaster on the playground
+play import <toaster_path> - Import a toaster from the specified path
+play up [vm]               - Startup Vagrant boxes. 
+play run [vm]              - Run Puppet on the playground. 
+play clean                 - Clean up the playground (Puppet files, Vagrantfile not touched)
+play setup default         - Reinstall the default Vagrantfile (Puppet files not touched)
+play setup example42       - Install Example42 modules (Vagrantfile and manifests not touched)
+play forge <command>       - Execute puppet module \$* commands to interact with PuppetForge
+play puppi <command>       - Execute puppi \$* commands on the running boxes
+
+See README for more details.
+EOF
+}
+
+SETCOLOR_NORMAL="echo -en \\033[0;39m"
+SETCOLOR_TITLE="echo -en \\033[0;35m"
+SETCOLOR_BOLD="echo -en \\033[0;1m"
+
+echo_title () {
+ echo
+ $SETCOLOR_BOLD ; echo $1 ; $SETCOLOR_NORMAL
+}
+
+ask_confirm () {
+cat << EOF
+I'm going to wipe out the current Playground:
+- modules/ directory
+- manifests/ directory
+- Puppetfile
+- Vagrantfile (if provided)
+
+Do you really want to destroy the Playground? (y/N)
+Answer NO if you have valuable changes in those files.
+EOF
+
+  read answer
+  [ "x$answer" == "xy" ] || exit 3
+}
+
+list_toaster() {
+  echo_title "Available toasters for $0 install"
+  ls -1 $toasterdir
+}
+
+install_toaster() {
+  clean
+  echo_title "Installing toaster $1 in the Playground"
+  cp -f $1/Puppetfile Puppetfile
+  cp -fr $1/manifests . 
+  [ -f $1/Vagrantfile ] && cp -f $1/Vagrantfile Vagrantfile
+
+  echo_title "Running librarian-puppet install"  
+  librarian-puppet install
+}
+
+run_playground() {
+  echo_title "Running the playground (vagrant provision)"
+  vagrant provision $1
+}
+
+up_playground() {
+  echo_title "Starting up Vagrant VMs (vagrant up)"
+  vagrant up $1
+}
+
+run_puppi() {
+  echo_title "Running puppi $puppi_action on the active boxes of the Playground"
+  for vm in $(vagrant status | grep 'running$' | cut -d ' ' -f 1 ) ; do
+    echo_title "puppi check on $vm"
+    vagrant ssh $vm -c "sudo /usr/sbin/puppi $puppi_action"
+  done
+}
+
+run_forge() {
+  echo_title "Executing: puppet module $forge_action --modulepath modules/"
+  puppet module $forge_action --modulepath modules/
+}
+
+setup_example42() {
+  clean
+  echo_title "Setting up Example42 NetGen modules"
+  git clone --recursive https://github.com/example42/puppet-modules.git modules
+}
+
+setup_default() {
+  echo_title "Recovering default Vagrantfile"
+  cp -f Vagrantfile.default Vagrantfile
+}
+
+clean() {
+  ask_confirm
+  echo_title "Removing modules dir, manifests/init.pp and Puppetfile from the Playground"
+  rm -rf modules/
+  rm -rf manifests/
+  rm -f Puppetfile
+  rm -f Puppetfile.lock
+  mkdir manifests
+  mkdir modules
+  touch manifests/init.pp
+}
+
+clean_librarian() {
+  echo_title "Executing librarian-puppet clean"
+  librarian-puppet clean
+}
+
+status() {
+  echo_title "Modules status (puppet module list --modulepath=modules/) "
+  puppet module list --modulepath=modules/
+
+  echo_title "Modules status (librarian-puppet show) "
+  librarian-puppet show
+
+  echo_title "Content of modules/ directory "
+  ls -l modules/
+
+  echo_title "Content of manifests/ directory "
+  ls -l manifests/
+  
+  echo_title "Content of manifests/init.pp"
+  cat manifests/init.pp
+
+  echo_title "Vagrant Status"
+  vagrant status
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    list)
+      action=$1
+      shift
+      ;;
+    clean)
+      action=$1
+      shift
+      ;;
+    status)
+      action=$1
+      shift
+      ;;
+    install)
+      action=$1
+      toaster=$2
+      shift 2
+      ;;
+    import)
+      action=$1
+      toaster_path=$2
+      shift 2
+      ;;
+    run)
+      action=$1
+      run_vm=$2
+      shift $#
+      ;;
+    up)
+      action=$1
+      up_vm=$2
+      shift $#
+      ;;
+    import)
+      action=$1
+      import_path=$2
+      shift 2
+      ;;
+    setup)
+      action=$1
+      setup_action=$2
+      shift 2
+      ;;
+    puppi)
+      action=$1
+      shift
+      puppi_action=$*
+      shift $#
+      ;;
+    forge)
+      action=$1
+      shift
+      forge_action=$*
+      shift $#
+      ;;
+    *)
+      showhelp
+      exit
+      ;;
+  esac
+done
+
+case $action in 
+  list) list_toaster ;;
+  install) install_toaster $toasterdir/$toaster ;;
+  import) install_toaster $toaster_path ;;
+  clean) clean ; clean_librarian ;;
+  status) status ;;
+  run ) run_playground $run_vm ;;
+  up ) up_playground $up_vm ;;
+  setup ) setup_$setup_action ;;
+  forge ) run_forge ;;
+  puppi ) run_puppi ;;
+  * ) showhelp ;;
+esac
+
