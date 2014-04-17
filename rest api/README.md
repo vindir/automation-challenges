@@ -50,17 +50,23 @@ for adding and updating your own data to see the service in action. The database
 data, but using the below you can mix and match. Have fun!
 
 ### Creating/Updating Words
+```
 curl -i -H "Accept: application/json" -X PUT -d '{ "word": "bacteria" }' http://localhost:3000/word/bacteria
+```
 
 ### Delete a Word
+```
 curl -i -H "Accept: application/json" -X DELETE http://localhost:3000/word/eukaryota
+```
 
 ### Delete all Words
+```
 curl -i -H "Accept: application/json" -X DELETE http://localhost:3000/words
+```
 
 ### Viewing Data
 Using our curl examples we know how to send REST requests to the server, but we should probably be able to view it. To
-get a look at the available data, use your browser of choice and visit http://localhost:3000/words to see a listing of
-all words and counts that have been sent through the API.  If you want to see data for a single word, just point your
-browser at the word resource itself as in the example of http://localhost:3000/words/eukaryota
+get a look at the available data, use your browser of choice and visit [http://localhost:3000/words](http://localhost:3000/words)
+to see a listing of all words and counts that have been sent through the API.  If you want to see data for a single word, just
+point your browser at the word resource itself as in the example of [http://localhost:3000/words/eukaryota](http://localhost:3000/words/eukaryota)
 
