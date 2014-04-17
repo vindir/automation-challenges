@@ -9,6 +9,7 @@ is simple, but written to show off basic OO methodology, robustness principles, 
 
 ### Additional Thoughts:
 * For the PUT /word resource, including the word name in the request body is redundant to the resource identified in the URI
+* A DELETE resource for the API isn't defined, but should be there. Implemented a target for DELETE.
 * Need persistance, but no sense using the typical ORM in this use case.  Implemented using direct sqlite3
 * It should use a web library like Reel that is lightweight, focuses on concurrency, and allows for clean code.
 * For Code Review: Reel Response Codes are at https://github.com/tarcieri/http/blob/master/lib/http/response.rb
