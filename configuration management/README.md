@@ -1,10 +1,10 @@
-Config Management
------------------
+Configuration Management
+========================
 
 ## Considerations
 
 The first thing that sticks out with this challenge is that we're using facter to get our replacement values.  In a situation
-where puppet is in place, we should avoid pushing files not using the puppet managed configuration as much as possible. The
+where puppet is in place, we should avoid pushing files unles it's via the puppet installation as much as possible. The
 one stand-out scenario where we may want a custom script here would be a developer tool for pushing temporary files to VMs
 using the machine facts.
 
