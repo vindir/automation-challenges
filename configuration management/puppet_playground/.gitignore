@@ -1,0 +1,7 @@
+.vagrant
+.librarian
+.tmp/
+/manifests/
+/modules/
+/Puppetfile.lock
+/Puppetfile
